@@ -1,0 +1,29 @@
+# Docker compose
+docker compose up -d
+
+# Migration
+poetry run alembic revision --autogenerate -m "create table users"
+poetry run alembic current
+poetry run alembic upgrade head
+poetry run alembic history
+poetry run alembic downgrade <revision>
+poetry run alembic upgrade <revision>
+
+# Run
+poetry env activate
+poetry install
+poetry run uvicorn app.app:create_app --reload --factory
+
+# Redis (Docker Exec)
+redis-cli -h 127.0.0.1 -p 6379
+> keys *
+
+# Connect to StarRocks (Docker Exec)
+mysql -h 127.0.0.1 -P 9030 -u root
+SHOW DATABASES;
+
+# StarRocks setup: run init.sql after container starts (powershell)
+Get-Content .\starrocks-config\init.sql | docker exec -i starrocks-fe mysql -h"127.0.0.1" -P9030 -uroot
+
+# StarRocks Insert data
+Get-Content .\starrocks-config\insert.sql | docker exec -i starrocks-fe mysql  --default-character-set=utf8mb4 -h"127.0.0.1" -P9030 -uroot

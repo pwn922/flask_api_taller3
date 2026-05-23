@@ -1,0 +1,185 @@
+{
+  "info": {
+    "name": "flask_app",
+    "description": null,
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "{{AUTH_URL}}/signin",
+              "protocol": "",
+              "host": [
+                "{{AUTH_URL}}"
+              ],
+              "path": [
+                "signin"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"example@gmail.com\",\n  \"password\": \"example\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "{{USERS_URL}}",
+              "protocol": "",
+              "host": [
+                "{{USERS_URL}}"
+              ],
+              "path": [],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"test15\",\n  \"email\": \"test15@local.com\",\n  \"password\": \"test123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "{{USERS_URL}}/80e166cf-7ced-47dc-822e-0f583e5b25b1",
+              "protocol": "",
+              "host": [
+                "{{USERS_URL}}"
+              ],
+              "path": [
+                "80e166cf-7ced-47dc-822e-0f583e5b25b1"
+              ],
+              "query": [],
+              "variable": []
+            }
+          }
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "{{USERS_URL}}/4306bcd9-dd58-4840-b2b9-6df3ea4c4e15",
+              "protocol": "",
+              "host": [
+                "{{USERS_URL}}"
+              ],
+              "path": [
+                "4306bcd9-dd58-4840-b2b9-6df3ea4c4e15"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "{{USERS_URL}}/cb040424-fc35-4d4a-aa01-ca9944faaa3a",
+              "protocol": "",
+              "host": [
+                "{{USERS_URL}}"
+              ],
+              "path": [
+                "cb040424-fc35-4d4a-aa01-ca9944faaa3a"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"test6\",\n  \"email\": \"test6@local.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "AUTH_URL",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "APP_URL",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "USERS_URL",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}

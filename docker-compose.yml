@@ -1,0 +1,62 @@
+services:
+  starrocks-fe:
+    image: starrocks/fe-ubuntu:4.0-latest
+    container_name: starrocks-fe
+    hostname: starrocks-fe
+    user: root
+    command: >
+      bash /opt/starrocks/fe/bin/start_fe.sh --host_type FQDN
+    ports:
+      - "8030:8030"   # Web UI
+      - "9020:9020"   # RPC
+      - "9030:9030"   # MySQL protocol
+    volumes:
+      - fe_meta:/opt/starrocks/fe/meta
+      - fe_log:/opt/starrocks/fe/log
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - starrocks-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -h127.0.0.1 -P9030 -uroot -e 'SHOW FRONTENDS;'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  starrocks-be:
+    image: starrocks/be-ubuntu:4.0-latest
+    container_name: starrocks-be
+    hostname: starrocks-be
+    user: root
+    depends_on:
+      starrocks-fe:
+        condition: service_healthy
+    command: >
+      bash -c "
+      ulimit -n 65535;
+      sleep 10;
+      mysql -h starrocks-fe -P 9030 -uroot -e
+      \"ALTER SYSTEM ADD BACKEND 'starrocks-be:9050';\";
+      bash /opt/starrocks/be/bin/start_be.sh
+      "
+    ports:
+      - "8040:8040"
+    volumes:
+      - be_storage:/opt/starrocks/be/storage
+      - be_log:/opt/starrocks/be/log
+    networks:
+      - starrocks-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -h starrocks-fe -P9030 -uroot -e 'SHOW BACKENDS;' | grep Alive"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+networks:
+  starrocks-net:
+    driver: bridge
+
+volumes:
+  fe_meta:
+  fe_log:
+  be_storage:
+  be_log:
