@@ -5,6 +5,11 @@ from .get_producto_mas_vendido import GetProductoMasVendidoUseCase
 from .get_ciudad_mas_comprada import GetCiudadMasCompradaUseCase
 from .get_metodo_pago_mas_usado import GetMetodoPagoMasUsadoUseCase
 from .get_ventas_por_categoria import GetVentasPorCategoriaUseCase
+from .get_compras_por_ciudad import GetComprasPorCiudadUseCase
+from .get_compras_por_rango_etario import GetComprasPorRangoEtarioUseCase
+from .get_ventas_por_fecha import GetVentasPorFechaUseCase
+from .get_productos_mas_vendidos import GetProductosMasVendidosUseCase
+from .get_metodos_pago import GetMetodosPagoUseCase
 from .import_csv import ImportCsvUseCase
 
 __all__ = [
@@ -15,5 +20,10 @@ __all__ = [
     "GetCiudadMasCompradaUseCase",
     "GetMetodoPagoMasUsadoUseCase",
     "GetVentasPorCategoriaUseCase",
+    "GetComprasPorCiudadUseCase",
+    "GetComprasPorRangoEtarioUseCase",
+    "GetVentasPorFechaUseCase",
+    "GetProductosMasVendidosUseCase",
+    "GetMetodosPagoUseCase",
     "ImportCsvUseCase",
 ]
