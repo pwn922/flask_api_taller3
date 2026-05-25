@@ -40,4 +40,4 @@ htmlcov/
 *.txt
 !commands.txt
 
-sessions
+sessions_oc
