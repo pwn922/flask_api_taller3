@@ -5,40 +5,33 @@ from app.db.starrocks.filter_builder import SQLFilterBuilder
 from app.sales.infrastructure.databases.starrocks.models.sale_model import TABLE_NAME_VENTAS
 
 
-class GetTopCategoryUseCase:
+class GetMetodosPagoUseCase:
     def __init__(self, client: StarRocksClientAsync):
         self.client = client
 
     async def execute(
         self,
         city: Optional[str] = None,
-        payment_method: Optional[str] = None,
+        category: Optional[str] = None,
         date_from: Optional[str] = None,
         date_until: Optional[str] = None,
-    ) -> list[dict] | None:
+    ) -> list[dict]:
         where, params = SQLFilterBuilder(
             city=city,
-            payment_method=payment_method,
+            category=category,
             date_from=date_from,
             date_until=date_until,
         ).build()
 
         result = await self.client.execute(f"""
-            SELECT categoria, total
-            FROM (
-                SELECT
-                    categoria,
-                    SUM(precio) AS total,
-                    RANK() OVER (ORDER BY SUM(precio) DESC) AS rnk
-                FROM {TABLE_NAME_VENTAS}
-                {where}
-                GROUP BY categoria
-            ) t
-            WHERE rnk = 1
-            ORDER BY categoria
+            SELECT metodo_pago, COUNT(*) AS total
+            FROM {TABLE_NAME_VENTAS}
+            {where}
+            GROUP BY metodo_pago
+            ORDER BY total DESC
         """, params)
 
         return [
-            {"category": row[0], "total": float(row[1]) if row[1] is not None else 0}
-            for row in result if row[0] is not None
-        ] if result else None
+            {"payment_method": row[0], "total": int(row[1])}
+            for row in result
+        ]

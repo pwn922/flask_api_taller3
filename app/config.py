@@ -15,6 +15,7 @@ class BaseConfig:
 
     STARROCKS_HOST = os.environ.get("STARROCKS_HOST", "localhost")
     STARROCKS_PORT = int(os.environ.get("STARROCKS_PORT", 9030))
+    STARROCKS_HTTP_PORT = int(os.environ.get("STARROCKS_HTTP_PORT", 8030))
     STARROCKS_DATABASE = os.environ.get("STARROCKS_DATABASE", "ventas_db")
     STARROCKS_USER = os.environ.get("STARROCKS_USER", "root")
     STARROCKS_PASSWORD = os.environ.get("STARROCKS_PASSWORD", "")

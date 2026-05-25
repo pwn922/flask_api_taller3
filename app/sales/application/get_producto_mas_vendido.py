@@ -41,6 +41,6 @@ class GetProductoMasVendidoUseCase:
         """, params)
 
         return [
-            {"product": row[0], "total": float(row[1])}
-            for row in result
+            {"product": row[0], "total": float(row[1]) if row[1] is not None else 0}
+            for row in result if row[0] is not None
         ] if result else None

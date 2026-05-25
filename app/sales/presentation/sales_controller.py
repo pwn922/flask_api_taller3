@@ -1,5 +1,5 @@
 from datetime import date
-from fastapi import APIRouter
+from fastapi import APIRouter, File, Form, UploadFile
 from typing import Optional
 
 from app.db.starrocks.client import get_starrocks_client
@@ -9,6 +9,13 @@ from app.sales.application import (
     GetProductoMasVendidoUseCase,
     GetCiudadMasCompradaUseCase,
     GetMetodoPagoMasUsadoUseCase,
+    GetVentasPorCategoriaUseCase,
+    GetComprasPorCiudadUseCase,
+    GetComprasPorRangoEtarioUseCase,
+    GetVentasPorFechaUseCase,
+    GetProductosMasVendidosUseCase,
+    GetMetodosPagoUseCase,
+    ImportCsvUseCase,
 )
 from app.sales.application.get_top_category import GetTopCategoryUseCase
 from app.sales.presentation.dto.api_response import ApiResponse
@@ -253,4 +260,241 @@ async def get_metodo_pago_mas_usado(
             success=False,
             message="Error al obtener el método de pago más usado. Intente nuevamente.",
             data={"payment_methods": []},
+        )
+
+
+@router.get("/ventas-por-categoria")
+async def get_ventas_por_categoria(
+    city: Optional[str] = None,
+    payment_method: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_until: Optional[date] = None,
+):
+    try:
+        client = await get_starrocks_client()
+        use_case = GetVentasPorCategoriaUseCase(client)
+
+        date_from_iso = date_from.isoformat() if date_from else None
+        date_until_iso = date_until.isoformat() if date_until else None
+
+        result = await use_case.execute(
+            city=city,
+            payment_method=payment_method,
+            date_from=date_from_iso,
+            date_until=date_until_iso,
+        )
+
+        return ApiResponse(
+            success=True,
+            message="Ventas por categoría obtenidas correctamente",
+            data={"categories": result},
+        )
+    except Exception:
+        return ApiResponse(
+            success=False,
+            message="Error al obtener ventas por categoría. Intente nuevamente.",
+            data={"categories": []},
+        )
+
+
+@router.get("/compras-por-ciudad")
+async def get_compras_por_ciudad(
+    category: Optional[str] = None,
+    payment_method: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_until: Optional[date] = None,
+):
+    try:
+        client = await get_starrocks_client()
+        use_case = GetComprasPorCiudadUseCase(client)
+
+        date_from_iso = date_from.isoformat() if date_from else None
+        date_until_iso = date_until.isoformat() if date_until else None
+
+        result = await use_case.execute(
+            category=category,
+            payment_method=payment_method,
+            date_from=date_from_iso,
+            date_until=date_until_iso,
+        )
+
+        return ApiResponse(
+            success=True,
+            message="Compras por ciudad obtenidas correctamente",
+            data={"cities": result},
+        )
+    except Exception:
+        return ApiResponse(
+            success=False,
+            message="Error al obtener compras por ciudad. Intente nuevamente.",
+            data={"cities": []},
+        )
+
+
+@router.get("/compras-por-rango-etario")
+async def get_compras_por_rango_etario(
+    city: Optional[str] = None,
+    category: Optional[str] = None,
+    payment_method: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_until: Optional[date] = None,
+):
+    try:
+        client = await get_starrocks_client()
+        use_case = GetComprasPorRangoEtarioUseCase(client)
+
+        date_from_iso = date_from.isoformat() if date_from else None
+        date_until_iso = date_until.isoformat() if date_until else None
+
+        result = await use_case.execute(
+            city=city,
+            category=category,
+            payment_method=payment_method,
+            date_from=date_from_iso,
+            date_until=date_until_iso,
+        )
+
+        return ApiResponse(
+            success=True,
+            message="Compras por rango etario obtenidas correctamente",
+            data={"age_ranges": result},
+        )
+    except Exception:
+        return ApiResponse(
+            success=False,
+            message="Error al obtener compras por rango etario. Intente nuevamente.",
+            data={"age_ranges": []},
+        )
+
+
+@router.get("/ventas-por-fecha")
+async def get_ventas_por_fecha(
+    city: Optional[str] = None,
+    category: Optional[str] = None,
+    payment_method: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_until: Optional[date] = None,
+):
+    try:
+        client = await get_starrocks_client()
+        use_case = GetVentasPorFechaUseCase(client)
+
+        date_from_iso = date_from.isoformat() if date_from else None
+        date_until_iso = date_until.isoformat() if date_until else None
+
+        result = await use_case.execute(
+            city=city,
+            category=category,
+            payment_method=payment_method,
+            date_from=date_from_iso,
+            date_until=date_until_iso,
+        )
+
+        return ApiResponse(
+            success=True,
+            message="Ventas por fecha obtenidas correctamente",
+            data={"daily_sales": result},
+        )
+    except Exception:
+        return ApiResponse(
+            success=False,
+            message="Error al obtener ventas por fecha. Intente nuevamente.",
+            data={"daily_sales": []},
+        )
+
+
+@router.get("/productos-mas-vendidos")
+async def get_productos_mas_vendidos(
+    city: Optional[str] = None,
+    category: Optional[str] = None,
+    payment_method: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_until: Optional[date] = None,
+    limit: int = 10,
+):
+    try:
+        client = await get_starrocks_client()
+        use_case = GetProductosMasVendidosUseCase(client)
+
+        date_from_iso = date_from.isoformat() if date_from else None
+        date_until_iso = date_until.isoformat() if date_until else None
+
+        result = await use_case.execute(
+            city=city,
+            category=category,
+            payment_method=payment_method,
+            date_from=date_from_iso,
+            date_until=date_until_iso,
+            limit=limit,
+        )
+
+        return ApiResponse(
+            success=True,
+            message="Productos más vendidos obtenidos correctamente",
+            data={"products": result},
+        )
+    except Exception:
+        return ApiResponse(
+            success=False,
+            message="Error al obtener productos más vendidos. Intente nuevamente.",
+            data={"products": []},
+        )
+
+
+@router.get("/metodos-pago")
+async def get_metodos_pago(
+    city: Optional[str] = None,
+    category: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_until: Optional[date] = None,
+):
+    try:
+        client = await get_starrocks_client()
+        use_case = GetMetodosPagoUseCase(client)
+
+        date_from_iso = date_from.isoformat() if date_from else None
+        date_until_iso = date_until.isoformat() if date_until else None
+
+        result = await use_case.execute(
+            city=city,
+            category=category,
+            date_from=date_from_iso,
+            date_until=date_until_iso,
+        )
+
+        return ApiResponse(
+            success=True,
+            message="Métodos de pago obtenidos correctamente",
+            data={"payment_methods": result},
+        )
+    except Exception:
+        return ApiResponse(
+            success=False,
+            message="Error al obtener métodos de pago. Intente nuevamente.",
+            data={"payment_methods": []},
+        )
+
+
+@router.post("/import-csv")
+async def import_csv(
+    file: UploadFile = File(...),
+    delete_existing: bool = Form(False),
+):
+    try:
+        use_case = ImportCsvUseCase()
+
+        csv_bytes = await file.read()
+        result = await use_case.execute(csv_bytes, delete_existing=delete_existing)
+
+        return ApiResponse(
+            success=True,
+            message=f"Se importaron {result['imported']} registros correctamente"
+                    + (f" ({result['errors']} errores)" if result['errors'] else ""),
+            data=result,
+        )
+    except Exception as e:
+        return ApiResponse(
+            success=False,
+            message=f"Error al importar CSV: {str(e)}",
+            data={"imported": 0, "errors": 0},
         )
