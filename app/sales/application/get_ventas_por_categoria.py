@@ -1,0 +1,41 @@
+from typing import Optional
+
+from app.db.starrocks.client import StarRocksClientAsync
+from app.db.starrocks.filter_builder import SQLFilterBuilder
+from app.sales.infrastructure.databases.starrocks.models.sale_model import TABLE_NAME_VENTAS
+
+
+class GetVentasPorCategoriaUseCase:
+    def __init__(self, client: StarRocksClientAsync):
+        self.client = client
+
+    async def execute(
+        self,
+        city: Optional[str] = None,
+        category: Optional[str] = None,
+        payment_method: Optional[str] = None,
+        date_from: Optional[str] = None,
+        date_until: Optional[str] = None,
+    ) -> list[dict]:
+        where, params = SQLFilterBuilder(
+            city=city,
+            category=category,
+            payment_method=payment_method,
+            date_from=date_from,
+            date_until=date_until,
+        ).build()
+
+        query = f"""
+            SELECT categoria, SUM(precio) AS total
+            FROM {TABLE_NAME_VENTAS}
+            {where}
+            GROUP BY categoria
+            ORDER BY total DESC
+        """
+
+        result = await self.client.execute(query, params)
+
+        return [
+            {"category": row[0], "total": float(row[1])}
+            for row in result
+        ]

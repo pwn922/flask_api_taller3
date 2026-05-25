@@ -11,6 +11,7 @@ from app.sales.application import (
     GetMetodoPagoMasUsadoUseCase,
 )
 from app.sales.application.get_top_category import GetTopCategoryUseCase
+from app.sales.application.get_ventas_por_categoria import GetVentasPorCategoriaUseCase
 from app.sales.presentation.dto.api_response import ApiResponse
 
 router = APIRouter()
@@ -132,6 +133,49 @@ async def get_top_category(
             message="Error al obtener la categoría más vendida. Intente nuevamente.",
             data={"categories": []},
         )
+
+@router.get("/ventas-por-categoria")
+async def get_ventas_por_categoria(
+    city: Optional[str] = None,
+    category: Optional[str] = None,
+    payment_method: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_until: Optional[date] = None,
+):
+    try:
+        client = await get_starrocks_client()
+        use_case = GetVentasPorCategoriaUseCase(client)
+
+        date_from_iso = date_from.isoformat() if date_from else None
+        date_until_iso = date_until.isoformat() if date_until else None
+
+        result = await use_case.execute(
+            city=city,
+            category=category,
+            payment_method=payment_method,
+            date_from=date_from_iso,
+            date_until=date_until_iso,
+        )
+
+        if not result:
+            return ApiResponse(
+                success=True,
+                message="No hay ventas registradas",
+                data={"categories": []},
+            )
+
+        return ApiResponse(
+            success=True,
+            message="Ventas por categoría obtenidas correctamente",
+            data={"categories": result},
+        )
+    except Exception:
+        return ApiResponse(
+            success=False,
+            message="Error al obtener ventas por categoría. Intente nuevamente.",
+            data={"categories": []},
+        )
+
 
 @router.get("/producto-mas-vendido")
 async def get_producto_mas_vendido(
