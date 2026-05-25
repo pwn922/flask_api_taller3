@@ -1,5 +1,5 @@
 from datetime import date
-from fastapi import APIRouter
+from fastapi import APIRouter, File, Form, UploadFile
 from typing import Optional
 
 from app.db.starrocks.client import get_starrocks_client
@@ -9,6 +9,7 @@ from app.sales.application import (
     GetProductoMasVendidoUseCase,
     GetCiudadMasCompradaUseCase,
     GetMetodoPagoMasUsadoUseCase,
+    ImportCsvUseCase,
 )
 from app.sales.application.get_top_category import GetTopCategoryUseCase
 from app.sales.application.get_ventas_por_categoria import GetVentasPorCategoriaUseCase
@@ -303,4 +304,29 @@ async def get_metodo_pago_mas_usado(
             success=False,
             message="Error al obtener el método de pago más usado. Intente nuevamente.",
             data={"payment_methods": []},
+        )
+
+
+@router.post("/import-csv")
+async def import_csv(
+    file: UploadFile = File(...),
+    delete_existing: bool = Form(False),
+):
+    try:
+        use_case = ImportCsvUseCase()
+
+        csv_bytes = await file.read()
+        result = await use_case.execute(csv_bytes, delete_existing=delete_existing)
+
+        return ApiResponse(
+            success=True,
+            message=f"Se importaron {result['imported']} registros correctamente"
+                    + (f" ({result['errors']} errores)" if result['errors'] else ""),
+            data=result,
+        )
+    except Exception as e:
+        return ApiResponse(
+            success=False,
+            message=f"Error al importar CSV: {str(e)}",
+            data={"imported": 0, "errors": 0},
         )

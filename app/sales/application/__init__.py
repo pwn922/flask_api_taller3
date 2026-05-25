@@ -5,6 +5,7 @@ from .get_producto_mas_vendido import GetProductoMasVendidoUseCase
 from .get_ciudad_mas_comprada import GetCiudadMasCompradaUseCase
 from .get_metodo_pago_mas_usado import GetMetodoPagoMasUsadoUseCase
 from .get_ventas_por_categoria import GetVentasPorCategoriaUseCase
+from .import_csv import ImportCsvUseCase
 
 __all__ = [
     "GetTotalVentasUseCase",
@@ -14,4 +15,5 @@ __all__ = [
     "GetCiudadMasCompradaUseCase",
     "GetMetodoPagoMasUsadoUseCase",
     "GetVentasPorCategoriaUseCase",
+    "ImportCsvUseCase",
 ]
