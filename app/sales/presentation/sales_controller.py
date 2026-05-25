@@ -94,6 +94,7 @@ async def get_promedio_gasto(
 @router.get("/top-category")
 async def get_top_category(
     city: Optional[str] = None,
+    category: Optional[str] = None,
     payment_method: Optional[str] = None,
     date_from: Optional[date] = None,
     date_until: Optional[date] = None,
@@ -107,6 +108,7 @@ async def get_top_category(
 
         result = await use_case.execute(
             city=city,
+            category=category,
             payment_method=payment_method,
             date_from=date_from_iso,
             date_until=date_until_iso,
@@ -176,6 +178,7 @@ async def get_producto_mas_vendido(
 
 @router.get("/ciudad-mas-comprada")
 async def get_ciudad_mas_comprada(
+    city: Optional[str] = None,
     category: Optional[str] = None,
     payment_method: Optional[str] = None,
     date_from: Optional[date] = None,
@@ -189,6 +192,7 @@ async def get_ciudad_mas_comprada(
         date_until_iso = date_until.isoformat() if date_until else None
 
         result = await use_case.execute(
+            city=city,
             category=category,
             payment_method=payment_method,
             date_from=date_from_iso,
@@ -219,6 +223,7 @@ async def get_ciudad_mas_comprada(
 async def get_metodo_pago_mas_usado(
     city: Optional[str] = None,
     category: Optional[str] = None,
+    payment_method: Optional[str] = None,
     date_from: Optional[date] = None,
     date_until: Optional[date] = None,
 ):
@@ -232,6 +237,7 @@ async def get_metodo_pago_mas_usado(
         result = await use_case.execute(
             city=city,
             category=category,
+            payment_method=payment_method,
             date_from=date_from_iso,
             date_until=date_until_iso,
         )

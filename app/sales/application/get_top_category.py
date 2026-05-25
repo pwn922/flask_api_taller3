@@ -12,12 +12,14 @@ class GetTopCategoryUseCase:
     async def execute(
         self,
         city: Optional[str] = None,
+        category: Optional[str] = None,
         payment_method: Optional[str] = None,
         date_from: Optional[str] = None,
         date_until: Optional[str] = None,
     ) -> list[dict] | None:
         where, params = SQLFilterBuilder(
             city=city,
+            category=category,
             payment_method=payment_method,
             date_from=date_from,
             date_until=date_until,

@@ -39,3 +39,5 @@ htmlcov/
 *.log
 *.txt
 !commands.txt
+
+sessions_oc
