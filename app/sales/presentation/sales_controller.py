@@ -676,12 +676,11 @@ async def import_csv(
     csv_bytes = await file.read()
     if len(csv_bytes) > MAX_FILE_SIZE:
         raise HTTPException(
-            status_code=413, detail="El archivo excede el tamaño máximo permitido (16MB)"
+            status_code=413, detail="El archivo excede el tamaño máximo permitido (500MB)"
         )
 
     try:
-        client = await get_starrocks_client()
-        use_case = ImportCsvUseCase(client)
+        use_case = ImportCsvUseCase()
         result = await use_case.execute(csv_bytes, delete_existing=delete_existing)
 
         return ApiResponse(

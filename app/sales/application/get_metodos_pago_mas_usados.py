@@ -26,10 +26,10 @@ class GetMetodosPagoMasUsadosUseCase:
         ).build()
 
         query = f"""
-            SELECT metodo_pago, COUNT(*) AS total
+            SELECT TRIM(LOWER(metodo_pago)) AS metodo_pago, COUNT(*) AS total
             FROM {TABLE_NAME_VENTAS}
             {where}
-            GROUP BY metodo_pago
+            GROUP BY TRIM(LOWER(metodo_pago))
             ORDER BY total DESC
         """
 
