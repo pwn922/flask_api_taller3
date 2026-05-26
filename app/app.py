@@ -16,8 +16,8 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="API",
         debug=(env == "development"),
-        docs_url=f"{api_prefix}/docs",
-        redoc_url=f"{api_prefix}/redoc",
+        docs_url="/docs",
+        redoc_url="/redoc",
         root_path=api_prefix,
     )
 
