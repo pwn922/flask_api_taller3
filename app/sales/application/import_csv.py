@@ -36,6 +36,12 @@ class ImportCsvUseCase:
             raise EmptyFileError()
 
         actual_columns = [c.strip() for c in df.columns]
+        if actual_columns[0] == "usuarioid":
+            actual_columns[0] = "usuario_id"
+
+        if actual_columns[-1] == "metodopago":
+            actual_columns[-1] = "metodo_pago"
+
         if actual_columns != EXPECTED_COLUMNS:
             raise InvalidColumnsError()
 
