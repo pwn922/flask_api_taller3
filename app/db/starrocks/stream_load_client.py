@@ -60,8 +60,10 @@ class StarRocksStreamLoadClient:
             f"/api/{self.database}/{table_name}/_stream_load"
         )
 
+    from typing import BinaryIO, AsyncGenerator
+
     @staticmethod
-    def _chunk_generator(
+    async def _chunk_generator(
         file_like: BinaryIO, chunk_size: int = 8192 * 1024
     ) -> AsyncGenerator[bytes, None]:
         while True:
