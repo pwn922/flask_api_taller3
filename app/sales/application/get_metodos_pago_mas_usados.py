@@ -5,7 +5,7 @@ from app.db.starrocks.filter_builder import SQLFilterBuilder
 from app.sales.infrastructure.databases.starrocks.models.sale_model import TABLE_NAME_VENTAS
 
 
-class GetComprasPorRangoEtarioUseCase:
+class GetMetodosPagoMasUsadosUseCase:
     def __init__(self, client: StarRocksClientAsync):
         self.client = client
 
@@ -26,33 +26,16 @@ class GetComprasPorRangoEtarioUseCase:
         ).build()
 
         query = f"""
-            SELECT
-                CASE
-                    WHEN edad BETWEEN 18 AND 25 THEN '18-25'
-                    WHEN edad BETWEEN 26 AND 35 THEN '26-35'
-                    WHEN edad BETWEEN 36 AND 45 THEN '36-45'
-                    WHEN edad BETWEEN 46 AND 60 THEN '46-60'
-                    WHEN edad > 60 THEN '60+'
-                    ELSE 'Otros'
-                END AS rango,
-                COUNT(*) AS total
+            SELECT metodo_pago, COUNT(*) AS total
             FROM {TABLE_NAME_VENTAS}
             {where}
-            GROUP BY rango
-            ORDER BY
-                CASE rango
-                    WHEN '18-25' THEN 1
-                    WHEN '26-35' THEN 2
-                    WHEN '36-45' THEN 3
-                    WHEN '46-60' THEN 4
-                    WHEN '60+' THEN 5
-                    ELSE 6
-                END
+            GROUP BY metodo_pago
+            ORDER BY total DESC
         """
 
         result = await self.client.execute(query, params)
 
         return [
-            {"range": row[0], "total": int(row[1])}
+            {"payment_method": row[0], "total": int(row[1])}
             for row in result
         ]
