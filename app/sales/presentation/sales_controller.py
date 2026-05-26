@@ -1,5 +1,5 @@
 from datetime import date
-from fastapi import APIRouter, File, Form, UploadFile
+from fastapi import APIRouter, File, Form, UploadFile, HTTPException
 from typing import Optional
 
 from app.db.starrocks.client import get_starrocks_client
@@ -18,7 +18,9 @@ from app.sales.application.get_compras_por_rango_etario import GetComprasPorRang
 from app.sales.application.get_ventas_por_fecha import GetVentasPorFechaUseCase
 from app.sales.application.get_productos_mas_vendidos import GetProductosMasVendidosUseCase
 from app.sales.application.get_metodos_pago import GetMetodosPagoUseCase
+from app.sales.application.errors import ImportCsvError
 from app.sales.presentation.dto.api_response import ApiResponse
+
 
 router = APIRouter()
 
@@ -527,16 +529,30 @@ async def get_metodos_pago(
         )
 
 
+ALLOWED_CSV_EXTENSIONS = {"csv"}
+MAX_FILE_SIZE = 16 * 1024 * 1024
+
 @router.post("/import-csv")
 async def import_csv(
     file: UploadFile = File(...),
     delete_existing: bool = Form(False),
 ):
+    if not file.filename or "." not in file.filename:
+        raise HTTPException(status_code=400, detail="Archivo inválido: sin extensión")
+
+    ext = file.filename.rsplit(".", 1)[1].lower()
+    if ext not in ALLOWED_CSV_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Solo se permiten archivos CSV")
+
+    csv_bytes = await file.read()
+    if len(csv_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413, detail="El archivo excede el tamaño máximo permitido (16MB)"
+        )
+
     try:
         client = await get_starrocks_client()
         use_case = ImportCsvUseCase(client)
-
-        csv_bytes = await file.read()
         result = await use_case.execute(csv_bytes, delete_existing=delete_existing)
 
         return ApiResponse(
@@ -544,6 +560,12 @@ async def import_csv(
             message=f"Se importaron {result['imported']} registros correctamente"
                     + (f" ({result['errors']} errores)" if result['errors'] else ""),
             data=result,
+        )
+    except ImportCsvError as e:
+        return ApiResponse(
+            success=False,
+            message=e.message,
+            data={"imported": 0, "errors": 0},
         )
     except Exception as e:
         return ApiResponse(

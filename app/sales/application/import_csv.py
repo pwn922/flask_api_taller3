@@ -1,4 +1,13 @@
+import io
+
+import pandas as pd
+
 from app.db.starrocks.client import StarRocksClientAsync
+from app.sales.application.errors import (
+    EmptyFileError,
+    InvalidColumnsError,
+    InvalidCsvFormatError,
+)
 from app.sales.infrastructure.databases.starrocks.models.sale_model import TABLE_NAME_VENTAS
 
 BATCH_SIZE = 1000
@@ -6,6 +15,8 @@ CSV_COLUMNS = (
     "usuario_id, edad, ciudad, producto, categoria, precio, "
     "fecha, hora, metodo_pago"
 )
+EXPECTED_COLUMNS = [c.strip() for c in CSV_COLUMNS.split(",")]
+PLACEHOLDERS = ", ".join(["%s"] * len(EXPECTED_COLUMNS))
 
 
 class ImportCsvUseCase:
@@ -16,44 +27,40 @@ class ImportCsvUseCase:
         if delete_existing:
             await self.client.command(f"TRUNCATE TABLE {TABLE_NAME_VENTAS}")
 
-        lines = csv_bytes.decode("utf-8").strip().splitlines()
-        if not lines:
-            return {"imported": 0, "errors": 0, "total_lines": 0}
+        try:
+            df = pd.read_csv(io.BytesIO(csv_bytes), encoding="utf-8")
+        except Exception:
+            raise InvalidCsvFormatError()
 
-        data_lines = lines[1:]
-        total = len(data_lines)
+        if df.empty:
+            raise EmptyFileError()
+
+        actual_columns = [c.strip() for c in df.columns]
+        if actual_columns != EXPECTED_COLUMNS:
+            raise InvalidColumnsError()
+
+        total = len(df)
         imported = 0
         errors = 0
 
+        query = (
+            f"INSERT INTO {TABLE_NAME_VENTAS} ({CSV_COLUMNS}) "
+            f"VALUES ({PLACEHOLDERS})"
+        )
+
         for i in range(0, total, BATCH_SIZE):
-            batch = data_lines[i : i + BATCH_SIZE]
-            values_sql = _build_values(batch)
-            query = (
-                f"INSERT INTO {TABLE_NAME_VENTAS} ({CSV_COLUMNS}) "
-                f"VALUES {values_sql}"
-            )
+            batch = df.iloc[i : i + BATCH_SIZE]
+            params_list = [
+                tuple(
+                    None if pd.isna(v) or v == "" or v == "\\N" else v
+                    for v in row
+                )
+                for _, row in batch.iterrows()
+            ]
             try:
-                await self.client.command(query)
+                await self.client.executemany(query, params_list)
                 imported += len(batch)
             except Exception:
                 errors += len(batch)
 
         return {"imported": imported, "errors": errors, "total_lines": total}
-
-
-def _build_values(lines: list[str]) -> str:
-    rows = []
-    for line in lines:
-        if not line.strip():
-            continue
-        cols = line.split(",")
-        escaped = []
-        for val in cols:
-            v = val.strip()
-            if v == "" or v == "\\N":
-                escaped.append("NULL")
-            else:
-                safe = v.replace("'", "''")
-                escaped.append(f"'{safe}'")
-        rows.append("(" + ",".join(escaped) + ")")
-    return ",".join(rows)

@@ -1,6 +1,6 @@
 import aiomysql
 import logging
-from typing import Optional, List, Tuple, Any
+from typing import Optional, List, Tuple, Any, Sequence
 from app.config import ActiveConfig
 
 logger = logging.getLogger(__name__)
@@ -41,10 +41,14 @@ class StarRocksClientAsync:
                 return await cursor.fetchall()
 
     async def command(self, query: str, parameters: Optional[tuple] = None) -> None:
-        """Ejecuta comandos sin retorno (DDL/DML). Soporta parámetros por seguridad."""
         async with await self._get_connection() as conn:
             async with conn.cursor() as cursor:
                 await cursor.execute(query, parameters)
+
+    async def executemany(self, query: str, parameters: List[Tuple[Any, ...]]) -> None:
+        async with await self._get_connection() as conn:
+            async with conn.cursor() as cursor:
+                await cursor.executemany(query, parameters)
 
     async def close(self):
         if self.pool:
