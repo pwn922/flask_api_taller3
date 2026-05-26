@@ -4,6 +4,9 @@ from typing import Optional
 
 from app.db.starrocks.client import get_starrocks_client
 from app.sales.application import (
+    GetCategoriasUseCase,
+    GetCiudadesUseCase,
+    GetMetodosPagoListUseCase,
     GetTotalVentasUseCase,
     GetPromedioGastoUseCase,
     GetProductoMasVendidoUseCase,
@@ -485,7 +488,7 @@ async def get_productos_mas_vendidos(
             data={"products": []},
         )
 
-
+"""
 @router.get("/metodos-pago")
 async def get_metodos_pago(
     city: Optional[str] = None,
@@ -513,6 +516,87 @@ async def get_metodos_pago(
             return ApiResponse(
                 success=True,
                 message="No hay ventas registradas",
+                data={"payment_methods": []},
+            )
+
+        return ApiResponse(
+            success=True,
+            message="Métodos de pago obtenidos correctamente",
+            data={"payment_methods": result},
+        )
+    except Exception:
+        return ApiResponse(
+            success=False,
+            message="Error al obtener métodos de pago. Intente nuevamente.",
+            data={"payment_methods": []},
+        )
+"""
+
+@router.get("/categorias")
+async def get_categorias():
+    try:
+        client = await get_starrocks_client()
+        use_case = GetCategoriasUseCase(client)
+        result = await use_case.execute()
+
+        if not result:
+            return ApiResponse(
+                success=True,
+                message="No hay categorías registradas",
+                data={"categories": []},
+            )
+
+        return ApiResponse(
+            success=True,
+            message="Categorías obtenidas correctamente",
+            data={"categories": result},
+        )
+    except Exception:
+        return ApiResponse(
+            success=False,
+            message="Error al obtener categorías. Intente nuevamente.",
+            data={"categories": []},
+        )
+
+
+@router.get("/ciudades")
+async def get_ciudades():
+    try:
+        client = await get_starrocks_client()
+        use_case = GetCiudadesUseCase(client)
+        result = await use_case.execute()
+
+        if not result:
+            return ApiResponse(
+                success=True,
+                message="No hay ciudades registradas",
+                data={"cities": []},
+            )
+
+        return ApiResponse(
+            success=True,
+            message="Ciudades obtenidas correctamente",
+            data={"cities": result},
+        )
+    except Exception:
+        return ApiResponse(
+            success=False,
+            message="Error al obtener ciudades. Intente nuevamente.",
+            data={"cities": []},
+        )
+
+
+@router.get("/metodos-pago")
+async def get_metodos_pago():
+    try:
+        client = await get_starrocks_client()
+        use_case = GetMetodosPagoListUseCase(client)
+        result = await use_case.execute()
+
+        if not result:
+            return ApiResponse(
+                success=True,
+                message="No hay métodos de pago registrados",
                 data={"payment_methods": []},
             )
 

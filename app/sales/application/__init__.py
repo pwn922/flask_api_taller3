@@ -9,7 +9,10 @@ from .get_compras_por_ciudad import GetComprasPorCiudadUseCase
 from .get_compras_por_rango_etario import GetComprasPorRangoEtarioUseCase
 from .get_ventas_por_fecha import GetVentasPorFechaUseCase
 from .get_productos_mas_vendidos import GetProductosMasVendidosUseCase
+from .get_categorias import GetCategoriasUseCase
+from .get_ciudades import GetCiudadesUseCase
 from .get_metodos_pago import GetMetodosPagoUseCase
+from .get_metodos_pago_list import GetMetodosPagoListUseCase
 from .import_csv import ImportCsvUseCase
 
 __all__ = [
@@ -24,6 +27,9 @@ __all__ = [
     "GetComprasPorRangoEtarioUseCase",
     "GetVentasPorFechaUseCase",
     "GetProductosMasVendidosUseCase",
+    "GetCategoriasUseCase",
+    "GetCiudadesUseCase",
     "GetMetodosPagoUseCase",
+    "GetMetodosPagoListUseCase",
     "ImportCsvUseCase",
 ]
