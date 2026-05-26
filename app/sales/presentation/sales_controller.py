@@ -659,7 +659,7 @@ async def get_metodos_pago():
 
 
 ALLOWED_CSV_EXTENSIONS = {"csv"}
-MAX_FILE_SIZE = 1024 * 1024 * 1024
+MAX_FILE_SIZE = 500 * 1024 * 1024
 
 @router.post("/import-csv")
 async def import_csv(
