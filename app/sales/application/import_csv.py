@@ -1,57 +1,59 @@
-import asyncio
-import base64
-import json
-import time
-import urllib.request
-
-from app.config import ActiveConfig
-from app.db.starrocks.client import get_starrocks_client
+from app.db.starrocks.client import StarRocksClientAsync
 from app.sales.infrastructure.databases.starrocks.models.sale_model import TABLE_NAME_VENTAS
 
-STREAM_LOAD_COLUMNS = "usuario_id,edad,ciudad,producto,categoria,precio,fecha,hora,metodo_pago"
+BATCH_SIZE = 1000
+CSV_COLUMNS = (
+    "usuario_id, edad, ciudad, producto, categoria, precio, "
+    "fecha, hora, metodo_pago"
+)
 
 
 class ImportCsvUseCase:
+    def __init__(self, client: StarRocksClientAsync):
+        self.client = client
+
     async def execute(self, csv_bytes: bytes, delete_existing: bool = False) -> dict:
         if delete_existing:
-            client = await get_starrocks_client()
-            await client.command(f"TRUNCATE TABLE {TABLE_NAME_VENTAS}")
+            await self.client.command(f"TRUNCATE TABLE {TABLE_NAME_VENTAS}")
 
-        url = (
-            f"http://{ActiveConfig.STARROCKS_HOST}:{ActiveConfig.STARROCKS_HTTP_PORT}"
-            f"/api/{ActiveConfig.STARROCKS_DATABASE}/{TABLE_NAME_VENTAS}/_stream_load"
-        )
+        lines = csv_bytes.decode("utf-8").strip().splitlines()
+        if not lines:
+            return {"imported": 0, "errors": 0, "total_lines": 0}
 
-        label = f"import_{int(time.time() * 1000)}"
+        data_lines = lines[1:]
+        total = len(data_lines)
+        imported = 0
+        errors = 0
 
-        credentials = base64.b64encode(
-            f"{ActiveConfig.STARROCKS_USER}:{ActiveConfig.STARROCKS_PASSWORD}".encode()
-        ).decode()
+        for i in range(0, total, BATCH_SIZE):
+            batch = data_lines[i : i + BATCH_SIZE]
+            values_sql = _build_values(batch)
+            query = (
+                f"INSERT INTO {TABLE_NAME_VENTAS} ({CSV_COLUMNS}) "
+                f"VALUES {values_sql}"
+            )
+            try:
+                await self.client.command(query)
+                imported += len(batch)
+            except Exception:
+                errors += len(batch)
 
-        first_newline = csv_bytes.find(b"\n")
-        if first_newline != -1:
-            csv_bytes = csv_bytes[first_newline + 1:]
+        return {"imported": imported, "errors": errors, "total_lines": total}
 
-        def _do_load():
-            req = urllib.request.Request(url, data=csv_bytes, method="PUT")
-            req.add_header("Expect", "100-continue")
-            req.add_header("Content-Type", "text/plain; charset=UTF-8")
-            req.add_header("label", label)
-            req.add_header("columns", STREAM_LOAD_COLUMNS)
-            req.add_header("column_separator", ",")
-            req.add_header("Authorization", f"Basic {credentials}")
 
-            with urllib.request.urlopen(req, timeout=600) as resp:
-                return json.loads(resp.read().decode())
-
-        result = await asyncio.to_thread(_do_load)
-
-        status = result.get("Status", "Fail")
-        imported = int(result.get("NumberLoadedRows", 0))
-        errors = int(result.get("NumberFilteredRows", 0))
-
-        if status != "Success":
-            msg = result.get("Message", status)
-            raise RuntimeError(f"Stream Load falló: {msg}")
-
-        return {"imported": imported, "errors": errors, "total_lines": imported + errors}
+def _build_values(lines: list[str]) -> str:
+    rows = []
+    for line in lines:
+        if not line.strip():
+            continue
+        cols = line.split(",")
+        escaped = []
+        for val in cols:
+            v = val.strip()
+            if v == "" or v == "\\N":
+                escaped.append("NULL")
+            else:
+                safe = v.replace("'", "''")
+                escaped.append(f"'{safe}'")
+        rows.append("(" + ",".join(escaped) + ")")
+    return ",".join(rows)

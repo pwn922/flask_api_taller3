@@ -533,7 +533,8 @@ async def import_csv(
     delete_existing: bool = Form(False),
 ):
     try:
-        use_case = ImportCsvUseCase()
+        client = await get_starrocks_client()
+        use_case = ImportCsvUseCase(client)
 
         csv_bytes = await file.read()
         result = await use_case.execute(csv_bytes, delete_existing=delete_existing)
